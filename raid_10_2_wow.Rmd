@@ -1,0 +1,131 @@
+---
+title: "raid_10_2_mythicreport"
+output: html_document
+date: "2023-11-22"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls())
+```
+
+date
+```{r}
+effdate<-"11-14-2023 to 11-20-2023"
+keyminlevel=8
+```
+
+
+create list of players
+
+```{r}
+raidmembers<-c("Demonhatchet","Venatrix","Vortzport","Sybia","Erutreya","Dezith","Caelystis","Cheerfully","Sonicbear","Atrociity","Toyullo","Cgholy","Stýks","Souplock","HolyDestror","Alitå","Òneshot","Felnaiir","Ghosteeboo","Deathpaladin","Áchlys","Obsdre","Opprèssor")
+```
+
+get URL encoded version
+
+```{r}
+urlraidmembers<-sapply(raidmembers,URLencode)
+```
+
+establish realms
+- assume dalaran unless specified
+```{r}
+raidrealms<-rep("Dalaran",length(raidmembers))
+
+raidrealms[which(raidmembers=="Obsdre")]="Illidan"
+```
+
+some useful functions
+
+```{r}
+# this function uses IO raider API and returns
+# a list for previous week's M+ run key levels (max of 10)
+getmplusnum<-function(aname,aserver="dalaran"){
+  webaddy=paste0("https://raider.io/api/v1/characters/profile?region=us&realm=",
+                 aserver,
+                 "&name=",
+                 aname,
+                 "&fields=mythic_plus_previous_weekly_highest_level_runs")
+    btc <- jsonlite::fromJSON(webaddy)
+    test<-btc$mythic_plus_previous_weekly_highest_level_runs$mythic_level
+    #return(btc)
+    #return(btc$mythic_plus_previous_weekly_highest_level_runs$mythic_level)
+    if(is.null(btc$mythic_plus_previous_weekly_highest_level_runs$mythic_level)){
+      return(0)
+    } else {
+      #return(nrow(btc$mythic_plus_previous_weekly_highest_level_runs$mythic_level))
+      return(as.numeric(btc$mythic_plus_previous_weekly_highest_level_runs$mythic_level))
+    }
+}
+
+# currently not used (was for season 2)
+gvreward<-function(n){
+  gvilvl<-c(415,418,421,421,424,424,428,428,431,431,434,434,437,437,441,441,444,444,447)
+  gvkeylvl<-c(2:20)
+  if(n>=2 & n<=20){
+    return(gvilvl[which(n==gvkeylvl)])
+  } else if (n > 20){
+    return(447)
+  } else {
+    return(407)
+  }
+  
+}
+
+# return the nth key in a list
+getnkey<-function(n,keylist){
+  if(length(keylist)>=n){
+    sortedlist<-sort(keylist,decreasing=TRUE)
+    return(sortedlist[n])
+  } else {
+    return(0)
+  }
+  
+}
+```
+
+test it
+
+```{r}
+anum<-data.frame(runs=getmplusnum(urlraidmembers[1],raidrealms[1]))
+
+
+```
+
+process raid members
+
+```{r}
+nruns=c(rep(0,length(raidmembers)))
+nruns2=nruns
+for(i in (1:length(raidmembers))){
+#for(i in 1:2){
+  crtmp=data.frame(myruns=getmplusnum(urlraidmembers[i],raidrealms[i]))
+  charruns<-subset(crtmp,myruns>=8)[,1]
+  nruns[i]=length(charruns)
+  nruns2[i]=length(crtmp$myruns)
+  print(paste(raidmembers[i],nruns[i]))
+}
+```
+
+massage data frame
+
+```{r}
+progdf4<-data.frame(char=raidmembers,numkeys=nruns,numkeys2=nruns2)
+```
+
+
+plot it
+
+```{r}
+library("ggplot2")
+
+mytitle=paste("Number of M+ runs(",keyminlevel," or higher)",effdate)
+
+ggplot(progdf4,aes(x=char,y=numkeys)) +
+  geom_bar(stat="identity") + 
+  theme(axis.text.x=element_text(angle=90,vjust=.5,hjust=1)) + ylab("Number of Keys")+ ggtitle(mytitle) + 
+  geom_hline(yintercept=4,col="red")
+
+```
+
