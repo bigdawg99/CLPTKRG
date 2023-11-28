@@ -10,8 +10,17 @@ rm(list=ls())
 ```
 
 date
+
 ```{r}
-effdate<-"11-14-2023 to 11-20-2023"
+library("lubridate")
+today<-Sys.Date()
+day1<-floor_date(today,"week")-5
+day2<-day1+6
+effdate<-paste(day1,"to",day2)
+```
+
+minkey
+```{r}
 keyminlevel=8
 ```
 
@@ -19,8 +28,9 @@ keyminlevel=8
 create list of players
 
 ```{r}
-raidmembers<-c("Demonhatchet","Venatrix","Vortzport","Sybia","Erutreya","Dezith","Caelystis","Cheerfully","Sonicbear","Atrociity","Toyullo","Cgholy","Stýks","Souplock","HolyDestror","Alitå","Òneshot","Felnaiir","Ghosteeboo","Deathpaladin","Áchlys","Obsdre","Opprèssor")
+raidmembers<-c("Demonhatchet","Venatrix","Vortzport","Sybia","Erutreya","Dezith","Caelystis","Cheerfully","Sonicbear","Atrociity","Toyullo","Cgholy","Stýks","Souplock","HolyDestror","Alitå","Òneshot","Felnaiir","Ghosteeboo","Deathpaladin","Áchlys","Obsdre","Opprèssor","Gerbanator","Traigriest","Visérióñ","Physikz")
 ```
+
 
 get URL encoded version
 
